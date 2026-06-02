@@ -30,6 +30,8 @@
             <label>Preferred payment provider</label>
             <label lang="de-DE">Bevorzugter Zahlungsanbieter</label>
             <defaultValue>auto</defaultValue>
+            <helpText>Note: stripe, transfi, robinhood and bitnovo require USD. upi requires INR, interac requires CAD.</helpText>
+            <helpText lang="de-DE">Hinweis: stripe, transfi, robinhood und bitnovo erfordern USD. upi erfordert INR, interac erfordert CAD.</helpText>
             <options>
                 <option>
                     <id>auto</id>
@@ -38,7 +40,11 @@
                 </option>
                 <option>
                     <id>stripe</id>
-                    <name>Stripe (Card / Apple Pay / Google Pay)</name>
+                    <name>Stripe (Card / Apple Pay / Google Pay) — USD only</name>
+                </option>
+                <option>
+                    <id>moonpay</id>
+                    <name>MoonPay</name>
                 </option>
                 <option>
                     <id>wert</id>
@@ -46,11 +52,27 @@
                 </option>
                 <option>
                     <id>transfi</id>
-                    <name>Transfi (SEPA / ACH)</name>
+                    <name>Transfi (SEPA / ACH) — USD only</name>
                 </option>
                 <option>
                     <id>rampnetwork</id>
                     <name>Ramp Network</name>
+                </option>
+                <option>
+                    <id>robinhood</id>
+                    <name>Robinhood — USD only</name>
+                </option>
+                <option>
+                    <id>bitnovo</id>
+                    <name>Bitnovo — USD only</name>
+                </option>
+                <option>
+                    <id>upi</id>
+                    <name>UPI — INR only</name>
+                </option>
+                <option>
+                    <id>interac</id>
+                    <name>Interac — CAD only</name>
                 </option>
             </options>
         </input-field>

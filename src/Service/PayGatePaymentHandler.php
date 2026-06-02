@@ -72,18 +72,40 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
         }
 
         $amount = $order->getAmountTotal();
-        $currency = $salesChannelContext->getCurrency()->getIsoCode();
+        $currency = strtoupper($salesChannelContext->getCurrency()->getIsoCode());
+        $provider = (string) $this->systemConfigService->get('PayGatePayment.config.paymentProvider', $salesChannelId);
 
+        // Provider-specific currency requirements override the user setting.
+        $forceUsd = in_array($provider, PayGateClient::USD_ONLY_PROVIDERS, true);
         $convert = (bool) $this->systemConfigService->get('PayGatePayment.config.convertToUsd', $salesChannelId);
-        if ($convert && strtoupper($currency) !== 'USD') {
+
+        if (($forceUsd || $convert) && $currency !== 'USD') {
             $conversion = $this->payGateClient->convertToUsd($currency, $amount);
             if ($conversion !== null) {
                 $amount = (float) $conversion['value_coin'];
                 $currency = 'USD';
+            } elseif ($forceUsd) {
+                throw new AsyncPaymentProcessException(
+                    $transactionId,
+                    sprintf('Provider "%s" requires USD but currency conversion failed.', $provider)
+                );
             }
         }
 
-        $provider = (string) $this->systemConfigService->get('PayGatePayment.config.paymentProvider', $salesChannelId);
+        if (isset(PayGateClient::FIXED_CURRENCY_PROVIDERS[$provider])
+            && $currency !== PayGateClient::FIXED_CURRENCY_PROVIDERS[$provider]
+        ) {
+            throw new AsyncPaymentProcessException(
+                $transactionId,
+                sprintf(
+                    'Provider "%s" only accepts %s currency; sales channel currency is %s.',
+                    $provider,
+                    PayGateClient::FIXED_CURRENCY_PROVIDERS[$provider],
+                    $currency
+                )
+            );
+        }
+
         $email = $order->getOrderCustomer() ? $order->getOrderCustomer()->getEmail() : null;
 
         $paymentUrl = $this->payGateClient->buildPaymentUrl(
@@ -91,8 +113,7 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
             $amount,
             $currency,
             $provider !== '' ? $provider : null,
-            $email,
-            $order->getOrderNumber()
+            $email
         );
 
         $existingCustomFields = $transaction->getOrderTransaction()->getCustomFields() ?? [];

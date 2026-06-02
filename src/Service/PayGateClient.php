@@ -62,6 +62,19 @@ class PayGateClient
     }
 
     /**
+     * Providers that only accept USD as currency.
+     */
+    public const USD_ONLY_PROVIDERS = ['stripe', 'transfi', 'robinhood', 'bitnovo'];
+
+    /**
+     * Providers that require a specific (non-USD) currency.
+     */
+    public const FIXED_CURRENCY_PROVIDERS = [
+        'upi' => 'INR',
+        'interac' => 'CAD',
+    ];
+
+    /**
      * Builds the redirect URL the customer is sent to on PayGate's checkout.
      */
     public function buildPaymentUrl(
@@ -69,8 +82,7 @@ class PayGateClient
         float $amount,
         string $currency,
         ?string $provider = null,
-        ?string $email = null,
-        ?string $orderNumber = null
+        ?string $email = null
     ): string {
         $params = [
             'address' => $addressIn,
@@ -83,9 +95,6 @@ class PayGateClient
         }
         if ($email !== null && $email !== '') {
             $params['email'] = $email;
-        }
-        if ($orderNumber !== null && $orderNumber !== '') {
-            $params['order_id'] = $orderNumber;
         }
 
         return self::CHECKOUT_BASE . '/process-payment.php?' . http_build_query($params);
