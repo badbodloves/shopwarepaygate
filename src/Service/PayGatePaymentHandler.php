@@ -73,10 +73,34 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
 
         $amount = $order->getAmountTotal();
         $currency = strtoupper($salesChannelContext->getCurrency()->getIsoCode());
+        $originalAmount = $amount;
+        $originalCurrency = $currency;
 
         $checkoutMode = (string) $this->systemConfigService->get('PayGatePayment.config.checkoutMode', $salesChannelId);
         $provider = (string) $this->systemConfigService->get('PayGatePayment.config.paymentProvider', $salesChannelId);
         $convert = (bool) $this->systemConfigService->get('PayGatePayment.config.convertToUsd', $salesChannelId);
+        $email = $order->getOrderCustomer() ? $order->getOrderCustomer()->getEmail() : null;
+
+        if ($checkoutMode === 'picker') {
+            // Store original order data; provider selection happens on the in-shop picker page.
+            $this->persistTransactionData($transaction, $salesChannelContext->getContext(), [
+                'paygate_address_in' => $wallet['address_in'],
+                'paygate_ipn_token' => $wallet['ipn_token'] ?? null,
+                'paygate_amount_original' => $originalAmount,
+                'paygate_currency_original' => $originalCurrency,
+                'paygate_customer_email' => $email,
+                'paygate_callback_url' => $callbackUrl,
+                'paygate_created_at' => (new \DateTimeImmutable())->format(DATE_ATOM),
+            ]);
+
+            $pickerUrl = $this->router->generate(
+                'frontend.paygate.select',
+                ['transactionId' => $transactionId],
+                UrlGeneratorInterface::ABSOLUTE_URL
+            );
+
+            return new RedirectResponse($pickerUrl);
+        }
 
         if ($checkoutMode === 'multi') {
             // Multi-provider mode: customer picks the provider on PayGate's hosted page.
@@ -120,8 +144,6 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
             }
         }
 
-        $email = $order->getOrderCustomer() ? $order->getOrderCustomer()->getEmail() : null;
-
         if ($checkoutMode === 'multi') {
             $whiteLabel = array_filter([
                 'domain' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelDomain', $salesChannelId),
@@ -148,20 +170,31 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
             );
         }
 
-        $existingCustomFields = $transaction->getOrderTransaction()->getCustomFields() ?? [];
-        $this->orderTransactionRepository->update([[
-            'id' => $transactionId,
-            'customFields' => array_merge($existingCustomFields, [
-                'paygate_address_in' => $wallet['address_in'],
-                'paygate_ipn_token' => $wallet['ipn_token'] ?? null,
-                'paygate_amount_sent' => $amount,
-                'paygate_currency_sent' => $currency,
-                'paygate_callback_url' => $callbackUrl,
-                'paygate_created_at' => (new \DateTimeImmutable())->format(DATE_ATOM),
-            ]),
-        ]], $salesChannelContext->getContext());
+        $this->persistTransactionData($transaction, $salesChannelContext->getContext(), [
+            'paygate_address_in' => $wallet['address_in'],
+            'paygate_ipn_token' => $wallet['ipn_token'] ?? null,
+            'paygate_amount_sent' => $amount,
+            'paygate_currency_sent' => $currency,
+            'paygate_amount_original' => $originalAmount,
+            'paygate_currency_original' => $originalCurrency,
+            'paygate_customer_email' => $email,
+            'paygate_callback_url' => $callbackUrl,
+            'paygate_created_at' => (new \DateTimeImmutable())->format(DATE_ATOM),
+        ]);
 
         return new RedirectResponse($paymentUrl);
+    }
+
+    private function persistTransactionData(
+        AsyncPaymentTransactionStruct $transaction,
+        \Shopware\Core\Framework\Context $context,
+        array $newFields
+    ): void {
+        $existing = $transaction->getOrderTransaction()->getCustomFields() ?? [];
+        $this->orderTransactionRepository->update([[
+            'id' => $transaction->getOrderTransaction()->getId(),
+            'customFields' => array_merge($existing, $newFields),
+        ]], $context);
     }
 
     public function finalize(

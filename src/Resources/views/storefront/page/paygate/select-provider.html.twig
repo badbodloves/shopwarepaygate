@@ -1,0 +1,79 @@
+{% sw_extends '@Storefront/storefront/base.html.twig' %}
+
+{% block base_main_container %}
+    <main class="paygate-picker-page py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-7">
+
+                    <header class="mb-4 text-center">
+                        <h1 class="h3 mb-2">Zahlungsart wählen</h1>
+                        <p class="text-muted mb-0">
+                            Bitte wähle, wie du deine Bestellung über
+                            <strong>{{ orderAmount|number_format(2, ',', '.') }} {{ orderCurrency }}</strong>
+                            bezahlen möchtest.
+                        </p>
+                    </header>
+
+                    {% if providerGroups is empty %}
+                        <div class="alert alert-warning" role="alert">
+                            Aktuell sind keine Zahlungsmethoden verfügbar. Bitte versuche es in wenigen Minuten erneut
+                            oder kontaktiere unseren Support.
+                        </div>
+                    {% endif %}
+
+                    {% for group in providerGroups %}
+                        <section class="card mb-4 shadow-sm paygate-provider-group" data-group="{{ group.icon }}">
+                            <div class="card-header bg-white">
+                                <h2 class="h5 mb-1">{{ group.label }}</h2>
+                                {% if group.description %}
+                                    <small class="text-muted">{{ group.description }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="list-group list-group-flush">
+                                {% for provider in group.providers %}
+                                    {% set disabled = provider._below_minimum %}
+                                    <a
+                                        href="{{ disabled ? '#' : path('frontend.paygate.confirm', { transactionId: transactionId, provider: provider.id }) }}"
+                                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center paygate-provider {% if disabled %}disabled text-muted{% endif %}"
+                                        {% if disabled %}aria-disabled="true" tabindex="-1"{% endif %}
+                                    >
+                                        <div class="d-flex align-items-center">
+                                            <div class="paygate-provider-icon me-3" aria-hidden="true">
+                                                <span class="badge bg-light text-dark border" style="width: 2.5rem; height: 2.5rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;">
+                                                    {{ provider._label|slice(0, 1)|upper }}
+                                                </span>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">{{ provider._label }}</div>
+                                                {% if provider.minimum_amount and provider.minimum_currency %}
+                                                    <small class="text-muted">
+                                                        Mindestbetrag:
+                                                        {{ provider.minimum_amount|number_format(2, ',', '.') }}
+                                                        {{ provider.minimum_currency }}
+                                                        {% if disabled %}
+                                                            <span class="text-danger ms-1">– Bestellbetrag zu niedrig</span>
+                                                        {% endif %}
+                                                    </small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                                            <path d="M5.293 1.5a1 1 0 0 1 1.414 0l6 6a1 1 0 0 1 0 1.414l-6 6a1 1 0 1 1-1.414-1.414L10.586 8 5.293 2.707a1 1 0 0 1 0-1.207Z"/>
+                                        </svg>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </section>
+                    {% endfor %}
+
+                    <p class="text-center text-muted small mt-4 mb-0">
+                        Die Zahlung wird sicher über PayGate.to abgewickelt. Du wirst nach der Auswahl direkt zum
+                        gewählten Anbieter weitergeleitet.
+                    </p>
+
+                </div>
+            </div>
+        </div>
+    </main>
+{% endblock %}

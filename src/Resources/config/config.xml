@@ -43,6 +43,11 @@
                     <name>Multi-provider hosted page (pay.php)</name>
                     <name lang="de-DE">Mehrere Anbieter, gehostete Seite (pay.php)</name>
                 </option>
+                <option>
+                    <id>picker</id>
+                    <name>In-Shop provider picker (German, themed)</name>
+                    <name lang="de-DE">Auswahlseite im Shop (deutsch, im Theme)</name>
+                </option>
             </options>
         </input-field>
 
