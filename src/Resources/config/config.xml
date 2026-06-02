@@ -26,6 +26,27 @@
         </input-field>
 
         <input-field type="single-select">
+            <name>checkoutMode</name>
+            <label>Checkout mode</label>
+            <label lang="de-DE">Checkout-Modus</label>
+            <defaultValue>single</defaultValue>
+            <helpText>Single = customer is sent directly to one provider. Multi = customer picks the provider on PayGate's hosted page (pay.php).</helpText>
+            <helpText lang="de-DE">Single = der Kunde wird direkt zu einem Anbieter weitergeleitet. Multi = der Kunde wählt den Anbieter auf der PayGate-Seite (pay.php).</helpText>
+            <options>
+                <option>
+                    <id>single</id>
+                    <name>Single provider (process-payment.php)</name>
+                    <name lang="de-DE">Einzelner Anbieter (process-payment.php)</name>
+                </option>
+                <option>
+                    <id>multi</id>
+                    <name>Multi-provider hosted page (pay.php)</name>
+                    <name lang="de-DE">Mehrere Anbieter, gehostete Seite (pay.php)</name>
+                </option>
+            </options>
+        </input-field>
+
+        <input-field type="single-select">
             <name>paymentProvider</name>
             <label>Preferred payment provider</label>
             <label lang="de-DE">Bevorzugter Zahlungsanbieter</label>
@@ -93,6 +114,48 @@
             <defaultValue>false</defaultValue>
             <helpText>When enabled the plugin actively polls payment-status.php on return. Normally the callback URL is sufficient.</helpText>
             <helpText lang="de-DE">Wenn aktiviert, ruft das Plugin payment-status.php aktiv ab. Normalerweise reicht der Callback aus.</helpText>
+        </input-field>
+    </card>
+
+    <card>
+        <title>White-label (Multi-provider mode only)</title>
+        <title lang="de-DE">White-Label (nur Multi-Provider-Modus)</title>
+
+        <input-field>
+            <name>whiteLabelDomain</name>
+            <label>Custom checkout domain</label>
+            <label lang="de-DE">Eigene Checkout-Domain</label>
+            <placeholder>checkout.example.com</placeholder>
+            <helpText>Optional rebranded subdomain to replace checkout.paygate.to on the hosted page. Requires setup per PayGate's white-label guide.</helpText>
+            <helpText lang="de-DE">Optionale Subdomain, die checkout.paygate.to auf der gehosteten Seite ersetzt. Setup gemäß PayGate White-Label-Anleitung erforderlich.</helpText>
+        </input-field>
+
+        <input-field>
+            <name>whiteLabelLogo</name>
+            <label>Brand logo URL</label>
+            <label lang="de-DE">Logo-URL</label>
+            <placeholder>https://example.com/logo.png</placeholder>
+        </input-field>
+
+        <input-field>
+            <name>whiteLabelBackground</name>
+            <label>Background color</label>
+            <label lang="de-DE">Hintergrundfarbe</label>
+            <placeholder>#ffffff or white</placeholder>
+        </input-field>
+
+        <input-field>
+            <name>whiteLabelTheme</name>
+            <label>Theme color</label>
+            <label lang="de-DE">Theme-Farbe</label>
+            <placeholder>#0066cc or blue</placeholder>
+        </input-field>
+
+        <input-field>
+            <name>whiteLabelButton</name>
+            <label>Button color</label>
+            <label lang="de-DE">Button-Farbe</label>
+            <placeholder>#00a86b or green</placeholder>
         </input-field>
     </card>
 </config>

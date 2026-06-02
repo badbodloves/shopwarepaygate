@@ -75,7 +75,7 @@ class PayGateClient
     ];
 
     /**
-     * Builds the redirect URL the customer is sent to on PayGate's checkout.
+     * Builds the single-provider redirect URL (process-payment.php).
      */
     public function buildPaymentUrl(
         string $addressIn,
@@ -98,6 +98,55 @@ class PayGateClient
         }
 
         return self::CHECKOUT_BASE . '/process-payment.php?' . http_build_query($params);
+    }
+
+    /**
+     * Builds the multi-provider hosted checkout URL (pay.php) with optional
+     * white-label styling.
+     *
+     * @param array{domain?:string,logo?:string,background?:string,theme?:string,button?:string} $whiteLabel
+     */
+    public function buildMultiProviderUrl(
+        string $addressIn,
+        float $amount,
+        string $currency,
+        ?string $email = null,
+        array $whiteLabel = []
+    ): string {
+        $params = [
+            'address' => $addressIn,
+            'amount' => number_format($amount, 2, '.', ''),
+            'currency' => strtoupper($currency),
+        ];
+
+        if ($email !== null && $email !== '') {
+            $params['email'] = $email;
+        }
+
+        foreach (['domain', 'logo', 'background', 'theme', 'button'] as $key) {
+            if (isset($whiteLabel[$key]) && $whiteLabel[$key] !== '') {
+                $params[$key] = $whiteLabel[$key];
+            }
+        }
+
+        return self::CHECKOUT_BASE . '/pay.php?' . http_build_query($params);
+    }
+
+    /**
+     * Returns the live provider list (id, provider_name, status, minimum_amount, minimum_currency).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function listProviders(): array
+    {
+        $body = $this->httpGet(self::API_BASE . '/control/provider-status');
+        $data = $this->decodeJson($body);
+
+        if (!is_array($data)) {
+            throw new \RuntimeException('PayGate.to provider-status returned unexpected payload: ' . $body);
+        }
+
+        return $data;
     }
 
     /**

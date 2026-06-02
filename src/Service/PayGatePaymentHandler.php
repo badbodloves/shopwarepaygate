@@ -73,48 +73,80 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
 
         $amount = $order->getAmountTotal();
         $currency = strtoupper($salesChannelContext->getCurrency()->getIsoCode());
-        $provider = (string) $this->systemConfigService->get('PayGatePayment.config.paymentProvider', $salesChannelId);
 
-        // Provider-specific currency requirements override the user setting.
-        $forceUsd = in_array($provider, PayGateClient::USD_ONLY_PROVIDERS, true);
+        $checkoutMode = (string) $this->systemConfigService->get('PayGatePayment.config.checkoutMode', $salesChannelId);
+        $provider = (string) $this->systemConfigService->get('PayGatePayment.config.paymentProvider', $salesChannelId);
         $convert = (bool) $this->systemConfigService->get('PayGatePayment.config.convertToUsd', $salesChannelId);
 
-        if (($forceUsd || $convert) && $currency !== 'USD') {
-            $conversion = $this->payGateClient->convertToUsd($currency, $amount);
-            if ($conversion !== null) {
-                $amount = (float) $conversion['value_coin'];
-                $currency = 'USD';
-            } elseif ($forceUsd) {
+        if ($checkoutMode === 'multi') {
+            // Multi-provider mode: customer picks the provider on PayGate's hosted page.
+            // No provider/currency constraints to enforce here.
+            if ($convert && $currency !== 'USD') {
+                $conversion = $this->payGateClient->convertToUsd($currency, $amount);
+                if ($conversion !== null) {
+                    $amount = (float) $conversion['value_coin'];
+                    $currency = 'USD';
+                }
+            }
+        } else {
+            // Single-provider mode: enforce per-provider currency rules.
+            $forceUsd = in_array($provider, PayGateClient::USD_ONLY_PROVIDERS, true);
+
+            if (($forceUsd || $convert) && $currency !== 'USD') {
+                $conversion = $this->payGateClient->convertToUsd($currency, $amount);
+                if ($conversion !== null) {
+                    $amount = (float) $conversion['value_coin'];
+                    $currency = 'USD';
+                } elseif ($forceUsd) {
+                    throw new AsyncPaymentProcessException(
+                        $transactionId,
+                        sprintf('Provider "%s" requires USD but currency conversion failed.', $provider)
+                    );
+                }
+            }
+
+            if (isset(PayGateClient::FIXED_CURRENCY_PROVIDERS[$provider])
+                && $currency !== PayGateClient::FIXED_CURRENCY_PROVIDERS[$provider]
+            ) {
                 throw new AsyncPaymentProcessException(
                     $transactionId,
-                    sprintf('Provider "%s" requires USD but currency conversion failed.', $provider)
+                    sprintf(
+                        'Provider "%s" only accepts %s currency; sales channel currency is %s.',
+                        $provider,
+                        PayGateClient::FIXED_CURRENCY_PROVIDERS[$provider],
+                        $currency
+                    )
                 );
             }
         }
 
-        if (isset(PayGateClient::FIXED_CURRENCY_PROVIDERS[$provider])
-            && $currency !== PayGateClient::FIXED_CURRENCY_PROVIDERS[$provider]
-        ) {
-            throw new AsyncPaymentProcessException(
-                $transactionId,
-                sprintf(
-                    'Provider "%s" only accepts %s currency; sales channel currency is %s.',
-                    $provider,
-                    PayGateClient::FIXED_CURRENCY_PROVIDERS[$provider],
-                    $currency
-                )
-            );
-        }
-
         $email = $order->getOrderCustomer() ? $order->getOrderCustomer()->getEmail() : null;
 
-        $paymentUrl = $this->payGateClient->buildPaymentUrl(
-            (string) $wallet['address_in'],
-            $amount,
-            $currency,
-            $provider !== '' ? $provider : null,
-            $email
-        );
+        if ($checkoutMode === 'multi') {
+            $whiteLabel = array_filter([
+                'domain' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelDomain', $salesChannelId),
+                'logo' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelLogo', $salesChannelId),
+                'background' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelBackground', $salesChannelId),
+                'theme' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelTheme', $salesChannelId),
+                'button' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelButton', $salesChannelId),
+            ], static fn ($v): bool => $v !== '');
+
+            $paymentUrl = $this->payGateClient->buildMultiProviderUrl(
+                (string) $wallet['address_in'],
+                $amount,
+                $currency,
+                $email,
+                $whiteLabel
+            );
+        } else {
+            $paymentUrl = $this->payGateClient->buildPaymentUrl(
+                (string) $wallet['address_in'],
+                $amount,
+                $currency,
+                $provider !== '' ? $provider : null,
+                $email
+            );
+        }
 
         $existingCustomFields = $transaction->getOrderTransaction()->getCustomFields() ?? [];
         $this->orderTransactionRepository->update([[
