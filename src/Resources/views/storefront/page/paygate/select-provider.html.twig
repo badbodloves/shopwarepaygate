@@ -46,14 +46,13 @@
                                             </div>
                                             <div>
                                                 <div class="fw-semibold">{{ provider._label }}</div>
-                                                {% if provider.minimum_amount and provider.minimum_currency %}
-                                                    <small class="text-muted">
-                                                        Mindestbetrag:
-                                                        {{ provider.minimum_amount|number_format(2, ',', '.') }}
-                                                        {{ provider.minimum_currency }}
-                                                        {% if disabled %}
-                                                            <span class="text-danger ms-1">– Bestellbetrag zu niedrig</span>
-                                                        {% endif %}
+                                                {% if provider._subtitle %}
+                                                    <small class="text-muted d-block">{{ provider._subtitle }}</small>
+                                                {% endif %}
+                                                {% if disabled and provider.minimum_amount and provider.minimum_currency %}
+                                                    <small class="text-danger d-block">
+                                                        Mindestbetrag {{ provider.minimum_amount|number_format(2, ',', '.') }}
+                                                        {{ provider.minimum_currency }} nicht erreicht
                                                     </small>
                                                 {% endif %}
                                             </div>

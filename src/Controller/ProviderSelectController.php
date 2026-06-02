@@ -44,6 +44,50 @@ class ProviderSelectController extends StorefrontController
         ],
     ];
 
+    /**
+     * Customer-facing labels for known providers. Overrides the raw
+     * provider_name from the API so customers see merchant-style options
+     * (Kreditkarte / SEPA / ...) instead of backend processor names.
+     */
+    private const PROVIDER_LABELS = [
+        'stripe' => [
+            'label' => 'Kreditkarte (Visa, Mastercard, Amex)',
+            'subtitle' => 'Sofortige Zahlung mit 3D-Secure',
+        ],
+        'moonpay' => [
+            'label' => 'Kreditkarte & Wallets',
+            'subtitle' => 'Inkl. Apple Pay und Google Pay',
+        ],
+        'wert' => [
+            'label' => 'Kreditkarte',
+            'subtitle' => '3D-Secure abgesichert',
+        ],
+        'rampnetwork' => [
+            'label' => 'Kreditkarte & Apple Pay',
+            'subtitle' => 'Schnelle Abwicklung',
+        ],
+        'bitnovo' => [
+            'label' => 'Kreditkarte (international)',
+            'subtitle' => null,
+        ],
+        'robinhood' => [
+            'label' => 'Kreditkarte',
+            'subtitle' => null,
+        ],
+        'transfi' => [
+            'label' => 'SEPA-Lastschrift / Banküberweisung',
+            'subtitle' => 'Sicher direkt vom Bankkonto',
+        ],
+        'upi' => [
+            'label' => 'UPI',
+            'subtitle' => 'Für Kunden in Indien',
+        ],
+        'interac' => [
+            'label' => 'Interac',
+            'subtitle' => 'Für Kunden in Kanada',
+        ],
+    ];
+
     private EntityRepositoryInterface $orderTransactionRepository;
     private PayGateClient $payGateClient;
     private LoggerInterface $logger;
@@ -237,7 +281,8 @@ class ProviderSelectController extends StorefrontController
     }
 
     /**
-     * Adds display-only fields to a provider entry: rough below-minimum flag and a display label.
+     * Adds display-only fields to a provider entry: below-minimum flag and
+     * customer-facing label/subtitle.
      */
     private function annotate(array $provider, float $orderAmount, string $orderCurrency): array
     {
@@ -250,8 +295,12 @@ class ProviderSelectController extends StorefrontController
             && $minimumCurrency === $orderCurrency
             && $orderAmount < $minimumAmount;
 
+        $id = (string) $provider['id'];
+        $override = self::PROVIDER_LABELS[$id] ?? null;
+
         $provider['_below_minimum'] = $belowMinimum;
-        $provider['_label'] = (string) ($provider['provider_name'] ?? $provider['id']);
+        $provider['_label'] = $override['label'] ?? (string) ($provider['provider_name'] ?? $id);
+        $provider['_subtitle'] = $override['subtitle'] ?? null;
 
         return $provider;
     }
