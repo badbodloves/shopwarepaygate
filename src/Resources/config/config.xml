@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/trunk/src/Core/System/SystemConfig/Schema/config.xsd">
+
+    <card>
+        <title>PayGate.to Settings</title>
+        <title lang="de-DE">PayGate.to Einstellungen</title>
+
+        <input-field>
+            <name>merchantWallet</name>
+            <label>Merchant USDC (Polygon) wallet address</label>
+            <label lang="de-DE">USDC (Polygon) Wallet-Adresse für Auszahlungen</label>
+            <required>true</required>
+            <placeholder>0x...</placeholder>
+            <helpText>Your own Polygon wallet address that will receive instant USDC payouts.</helpText>
+            <helpText lang="de-DE">Ihre eigene Polygon Wallet-Adresse, die sofortige USDC-Auszahlungen erhält.</helpText>
+        </input-field>
+
+        <input-field>
+            <name>affiliateWallet</name>
+            <label>Affiliate wallet address (optional)</label>
+            <label lang="de-DE">Affiliate Wallet-Adresse (optional)</label>
+            <placeholder>0x...</placeholder>
+            <helpText>Optional secondary Polygon wallet earning affiliate commission on every sale.</helpText>
+            <helpText lang="de-DE">Optionale zweite Polygon Wallet, die bei jedem Verkauf eine Affiliate-Provision erhält.</helpText>
+        </input-field>
+
+        <input-field type="single-select">
+            <name>paymentProvider</name>
+            <label>Preferred payment provider</label>
+            <label lang="de-DE">Bevorzugter Zahlungsanbieter</label>
+            <defaultValue>auto</defaultValue>
+            <options>
+                <option>
+                    <id>auto</id>
+                    <name>Auto (let PayGate decide)</name>
+                    <name lang="de-DE">Automatisch (PayGate entscheidet)</name>
+                </option>
+                <option>
+                    <id>stripe</id>
+                    <name>Stripe (Card / Apple Pay / Google Pay)</name>
+                </option>
+                <option>
+                    <id>wert</id>
+                    <name>Wert</name>
+                </option>
+                <option>
+                    <id>transfi</id>
+                    <name>Transfi (SEPA / ACH)</name>
+                </option>
+                <option>
+                    <id>rampnetwork</id>
+                    <name>Ramp Network</name>
+                </option>
+            </options>
+        </input-field>
+
+        <input-field type="bool">
+            <name>convertToUsd</name>
+            <label>Convert non-USD currencies to USD automatically</label>
+            <label lang="de-DE">Nicht-USD Währungen automatisch zu USD umrechnen</label>
+            <defaultValue>true</defaultValue>
+            <helpText>Some providers (Stripe, Wert, Transfi, Ramp) only accept USD. When enabled the order total is converted via PayGate's convert.php endpoint.</helpText>
+            <helpText lang="de-DE">Einige Anbieter (Stripe, Wert, Transfi, Ramp) akzeptieren nur USD. Wenn aktiviert, wird der Bestellbetrag über den convert.php Endpunkt von PayGate umgerechnet.</helpText>
+        </input-field>
+
+        <input-field type="bool">
+            <name>verifyOnFinalize</name>
+            <label>Verify payment status on return from PayGate</label>
+            <label lang="de-DE">Zahlungsstatus bei Rückkehr von PayGate prüfen</label>
+            <defaultValue>false</defaultValue>
+            <helpText>When enabled the plugin actively polls payment-status.php on return. Normally the callback URL is sufficient.</helpText>
+            <helpText lang="de-DE">Wenn aktiviert, ruft das Plugin payment-status.php aktiv ab. Normalerweise reicht der Callback aus.</helpText>
+        </input-field>
+    </card>
+</config>
