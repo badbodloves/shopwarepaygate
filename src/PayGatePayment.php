@@ -51,18 +51,18 @@ class PayGatePayment extends Plugin
 
         $data = [
             'handlerIdentifier' => PayGatePaymentHandler::class,
-            'name' => 'PayGate.to',
-            'description' => 'Pay with credit card, Apple Pay, Google Pay, SEPA or ACH via PayGate.to',
+            'name' => 'Kreditkarte & SEPA',
+            'description' => 'Sichere Online-Zahlung mit Kreditkarte, Apple Pay, Google Pay oder SEPA-Lastschrift.',
             'pluginId' => $pluginId,
             'afterOrderEnabled' => true,
             'translations' => [
                 'de-DE' => [
-                    'name' => 'PayGate.to (Kreditkarte / Apple Pay / SEPA)',
-                    'description' => 'Zahlen mit Kreditkarte, Apple Pay, Google Pay, SEPA oder ACH über PayGate.to',
+                    'name' => 'Kreditkarte & SEPA',
+                    'description' => 'Sichere Online-Zahlung mit Kreditkarte, Apple Pay, Google Pay oder SEPA-Lastschrift.',
                 ],
                 'en-GB' => [
-                    'name' => 'PayGate.to (Card / Apple Pay / SEPA)',
-                    'description' => 'Pay with credit card, Apple Pay, Google Pay, SEPA or ACH via PayGate.to',
+                    'name' => 'Card & SEPA',
+                    'description' => 'Secure online payment by credit card, Apple Pay, Google Pay or SEPA.',
                 ],
             ],
         ];

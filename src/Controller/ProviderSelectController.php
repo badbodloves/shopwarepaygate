@@ -60,7 +60,7 @@ class ProviderSelectController extends StorefrontController
 
     /**
      * @Route(
-     *     "/paygate/select-provider/{transactionId}",
+     *     "/checkout/payment/select/{transactionId}",
      *     name="frontend.paygate.select",
      *     methods={"GET"}
      * )
@@ -96,7 +96,7 @@ class ProviderSelectController extends StorefrontController
 
     /**
      * @Route(
-     *     "/paygate/select-provider/{transactionId}/confirm",
+     *     "/checkout/payment/select/{transactionId}/confirm",
      *     name="frontend.paygate.confirm",
      *     methods={"GET"}
      * )

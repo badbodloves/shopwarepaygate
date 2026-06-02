@@ -39,7 +39,7 @@ class CallbackController extends StorefrontController
 
     /**
      * @Route(
-     *     "/paygate/callback/{transactionId}",
+     *     "/checkout/payment/notify/{transactionId}",
      *     name="frontend.paygate.callback",
      *     methods={"GET"},
      *     defaults={"csrf_protected"=false, "XmlHttpRequest"=true, "auth_required"=false}

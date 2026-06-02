@@ -120,7 +120,7 @@ Du hast drei Modi zur Auswahl:
 
 ### C) Auswahlseite im Shop (deutsch, im Theme) – **empfohlen**
 
-- Kunde landet auf einer eigenen Shopware-Seite (`/paygate/select-provider/...`)
+- Kunde landet auf einer eigenen Shopware-Seite (`/checkout/payment/select/...`)
 - Vollständig auf Deutsch, im Look deines Themes
 - Provider werden gruppiert dargestellt:
   - Kreditkarte & Wallets
@@ -135,7 +135,7 @@ Du hast drei Modi zur Auswahl:
 ## 6. Zahlungsmethode dem Verkaufskanal zuordnen
 
 Das Plugin registriert beim Installieren automatisch eine neue Zahlungsmethode
-**„PayGate.to (Kreditkarte / Apple Pay / SEPA)"**. Damit Kunden sie sehen,
+**„Kreditkarte & SEPA"**. Damit Kunden sie sehen,
 musst du sie noch dem Verkaufskanal zuweisen:
 
 1. **Verkaufskanäle → [dein Storefront]**
@@ -150,7 +150,7 @@ Optional kannst du sie auch als **Standardzahlungsart** festlegen.
 ## 7. Testlauf
 
 1. Im Storefront einen Testartikel in den Warenkorb legen
-2. Zur Kasse gehen, **PayGate.to** als Zahlungsart wählen
+2. Zur Kasse gehen, **Kreditkarte & SEPA** als Zahlungsart wählen
 3. Auf **Jetzt kostenpflichtig bestellen** klicken
 4. Je nach Modus:
    - **Single**: direkter Redirect zum Provider (z. B. Stripe-Seite)
@@ -159,7 +159,7 @@ Optional kannst du sie auch als **Standardzahlungsart** festlegen.
 5. Auf der Provider-Seite mit Testdaten zahlen
 6. Nach erfolgreicher Zahlung:
    - PayGate sendet einen Callback an
-     `https://deine-domain.de/paygate/callback/{transactionId}`
+     `https://deine-domain.de/checkout/payment/notify/{transactionId}`
    - Bestellung wird automatisch auf **bezahlt** gesetzt
    - Du erhältst USDC auf deine Polygon-Wallet (typischerweise innerhalb
      weniger Minuten)
@@ -198,7 +198,7 @@ PayGate
 - Deine Shopware-Installation muss öffentlich erreichbar sein.
   Lokal: ngrok-Tunnel + `APP_URL` in `.env` setzen.
 - HTTPS-Zertifikat muss gültig sein (PayGate verifiziert das)
-- Prüfen: `GET https://deine-domain.de/paygate/callback/test` muss
+- Prüfen: `GET https://deine-domain.de/checkout/payment/notify/test` muss
   eine Response liefern (404 ist ok, Connection-Refused nicht)
 
 ### „Provider X requires USD but currency conversion failed"
