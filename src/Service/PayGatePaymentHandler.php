@@ -78,7 +78,6 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
 
         $checkoutMode = (string) $this->systemConfigService->get('PayGatePayment.config.checkoutMode', $salesChannelId);
         $provider = (string) $this->systemConfigService->get('PayGatePayment.config.paymentProvider', $salesChannelId);
-        $convert = (bool) $this->systemConfigService->get('PayGatePayment.config.convertToUsd', $salesChannelId);
         $email = $order->getOrderCustomer() ? $order->getOrderCustomer()->getEmail() : null;
 
         if ($checkoutMode === 'picker') {
@@ -103,25 +102,21 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
         }
 
         if ($checkoutMode === 'multi') {
-            // Multi-provider mode: customer picks the provider on PayGate's hosted page.
-            // No provider/currency constraints to enforce here.
-            if ($convert && $currency !== 'USD') {
-                $conversion = $this->payGateClient->convertToUsd($currency, $amount);
-                if ($conversion !== null) {
-                    $amount = (float) $conversion['value_coin'];
-                    $currency = 'USD';
-                }
-            }
+            // Multi-provider mode: pay.php filters compatible providers based
+            // on the passed currency. We keep the shop currency so the customer
+            // sees familiar amounts (EUR, not USD).
         } else {
-            // Single-provider mode: enforce per-provider currency rules.
+            // Single-provider mode: only convert when the specifically chosen
+            // provider mandates USD. Generic auto-conversion would confuse
+            // customers by showing USD on the provider's page.
             $forceUsd = in_array($provider, PayGateClient::USD_ONLY_PROVIDERS, true);
 
-            if (($forceUsd || $convert) && $currency !== 'USD') {
+            if ($forceUsd && $currency !== 'USD') {
                 $conversion = $this->payGateClient->convertToUsd($currency, $amount);
                 if ($conversion !== null) {
                     $amount = (float) $conversion['value_coin'];
                     $currency = 'USD';
-                } elseif ($forceUsd) {
+                } else {
                     throw new AsyncPaymentProcessException(
                         $transactionId,
                         sprintf('Provider "%s" requires USD but currency conversion failed.', $provider)

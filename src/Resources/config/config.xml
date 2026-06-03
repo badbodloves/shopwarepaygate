@@ -104,15 +104,6 @@
         </input-field>
 
         <input-field type="bool">
-            <name>convertToUsd</name>
-            <label>Convert non-USD currencies to USD automatically</label>
-            <label lang="de-DE">Nicht-USD Währungen automatisch zu USD umrechnen</label>
-            <defaultValue>true</defaultValue>
-            <helpText>Some providers (Stripe, Wert, Transfi, Ramp) only accept USD. When enabled the order total is converted via PayGate's convert.php endpoint.</helpText>
-            <helpText lang="de-DE">Einige Anbieter (Stripe, Wert, Transfi, Ramp) akzeptieren nur USD. Wenn aktiviert, wird der Bestellbetrag über den convert.php Endpunkt von PayGate umgerechnet.</helpText>
-        </input-field>
-
-        <input-field type="bool">
             <name>verifyOnFinalize</name>
             <label>Verify payment status on return from PayGate</label>
             <label lang="de-DE">Zahlungsstatus bei Rückkehr von PayGate prüfen</label>
