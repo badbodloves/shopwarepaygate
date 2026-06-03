@@ -58,6 +58,14 @@ class PayGateClient
             throw new \RuntimeException('PayGate.to wallet creation failed. Response: ' . $body);
         }
 
+        // PayGate returns address_in and ipn_token already URL-encoded.
+        // Decode once so they can be re-encoded cleanly by http_build_query
+        // when we hand them to process-payment.php / pay.php / payment-status.php.
+        $data['address_in'] = rawurldecode((string) $data['address_in']);
+        if (isset($data['ipn_token'])) {
+            $data['ipn_token'] = rawurldecode((string) $data['ipn_token']);
+        }
+
         return $data;
     }
 
