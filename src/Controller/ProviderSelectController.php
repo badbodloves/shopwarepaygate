@@ -45,6 +45,24 @@ class ProviderSelectController extends StorefrontController
     ];
 
     /**
+     * Fallback provider list used when /control/provider-status is unreachable
+     * or returns nothing usable. Keeps the picker functional in edge cases.
+     */
+    private const FALLBACK_PROVIDERS = [
+        ['id' => 'stripe', 'provider_name' => 'Stripe', 'status' => 'active'],
+        ['id' => 'moonpay', 'provider_name' => 'MoonPay', 'status' => 'active'],
+        ['id' => 'wert', 'provider_name' => 'Wert', 'status' => 'active'],
+        ['id' => 'rampnetwork', 'provider_name' => 'Ramp Network', 'status' => 'active'],
+        ['id' => 'transfi', 'provider_name' => 'Transfi', 'status' => 'active'],
+    ];
+
+    /**
+     * Status values that explicitly mean "do not offer this provider".
+     * Everything else (active, online, up, unknown, …) is treated as available.
+     */
+    private const BAD_STATUSES = ['inactive', 'down', 'offline', 'disabled', 'maintenance', 'paused'];
+
+    /**
      * Customer-facing labels for known providers. Overrides the raw
      * provider_name from the API so customers see merchant-style options
      * (Kreditkarte / SEPA / ...) instead of backend processor names.
@@ -129,6 +147,15 @@ class ProviderSelectController extends StorefrontController
         $orderAmount = (float) ($customFields['paygate_amount_original'] ?? 0);
 
         $providerGroups = $this->groupProviders($providers, $orderAmount, $orderCurrency);
+
+        // If filtering left nothing (API down, unexpected status values, etc.)
+        // fall back to a static list so the customer can still pay.
+        if ($providerGroups === []) {
+            $this->logger->warning('PayGate.to provider-status returned no usable providers; using fallback list', [
+                'received_count' => count($providers),
+            ]);
+            $providerGroups = $this->groupProviders(self::FALLBACK_PROVIDERS, $orderAmount, $orderCurrency);
+        }
 
         return $this->renderStorefront('@PayGatePayment/storefront/page/paygate/select-provider.html.twig', [
             'transactionId' => $transactionId,
@@ -232,10 +259,11 @@ class ProviderSelectController extends StorefrontController
     {
         $byId = [];
         foreach ($providers as $p) {
-            if (!isset($p['id'])) {
+            if (!is_array($p) || !isset($p['id'])) {
                 continue;
             }
-            if (($p['status'] ?? '') !== 'active') {
+            $status = strtolower((string) ($p['status'] ?? ''));
+            if (in_array($status, self::BAD_STATUSES, true)) {
                 continue;
             }
             $byId[(string) $p['id']] = $p;

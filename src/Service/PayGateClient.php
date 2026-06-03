@@ -134,16 +134,43 @@ class PayGateClient
 
     /**
      * Returns the live provider list (id, provider_name, status, minimum_amount, minimum_currency).
+     * Handles common response shapes (bare array or {providers|data: [...]}) and logs the raw
+     * response so unexpected payloads can be diagnosed in prod.log.
      *
      * @return array<int, array<string, mixed>>
      */
     public function listProviders(): array
     {
         $body = $this->httpGet(self::API_BASE . '/control/provider-status');
-        $data = $this->decodeJson($body);
+        $this->logger->info('PayGate.to provider-status response', [
+            'body' => substr($body, 0, 2000),
+        ]);
 
+        $data = $this->decodeJson($body);
         if (!is_array($data)) {
-            throw new \RuntimeException('PayGate.to provider-status returned unexpected payload: ' . $body);
+            throw new \RuntimeException('PayGate.to provider-status returned non-JSON: ' . substr($body, 0, 200));
+        }
+
+        if (isset($data['providers']) && is_array($data['providers'])) {
+            $data = $data['providers'];
+        } elseif (isset($data['data']) && is_array($data['data'])) {
+            $data = $data['data'];
+        } elseif (isset($data['result']) && is_array($data['result'])) {
+            $data = $data['result'];
+        }
+
+        // If the array is associative (keyed by provider id), normalize to a list.
+        if ($data !== [] && array_keys($data) !== range(0, count($data) - 1)) {
+            $normalized = [];
+            foreach ($data as $key => $value) {
+                if (is_array($value)) {
+                    if (!isset($value['id'])) {
+                        $value['id'] = (string) $key;
+                    }
+                    $normalized[] = $value;
+                }
+            }
+            $data = $normalized;
         }
 
         return $data;
