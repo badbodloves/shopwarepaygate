@@ -236,6 +236,14 @@ class ProviderSelectController extends StorefrontController
             $email !== '' ? $email : null
         );
 
+        $this->logger->info('PayGate.to redirecting to process-payment.php', [
+            'transactionId' => $transactionId,
+            'provider' => $provider,
+            'amount' => $amount,
+            'currency' => $currency,
+            'url' => $url,
+        ]);
+
         return new RedirectResponse($url);
     }
 
