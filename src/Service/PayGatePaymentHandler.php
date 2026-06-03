@@ -145,14 +145,19 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
         }
 
         if ($checkoutMode === 'multi') {
-            $whiteLabel = array_filter([
-                'domain' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelDomain', $salesChannelId),
-                'logo' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelLogo', $salesChannelId),
-                'background' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelBackground', $salesChannelId),
-                'theme' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelTheme', $salesChannelId),
-                'button' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelButton', $salesChannelId),
-            ], static fn ($v): bool => $v !== '');
-
+            $whiteLabel = $this->loadWhiteLabel($salesChannelId);
+            $paymentUrl = $this->payGateClient->buildMultiProviderUrl(
+                (string) $wallet['address_in'],
+                $amount,
+                $currency,
+                $email,
+                $whiteLabel
+            );
+        } elseif ($provider === '' || $provider === 'auto') {
+            // process-payment.php requires an explicit provider; without one
+            // PayGate replies "Bad request method!". Fall back to the
+            // multi-provider hosted page (pay.php) which supports auto-selection.
+            $whiteLabel = $this->loadWhiteLabel($salesChannelId);
             $paymentUrl = $this->payGateClient->buildMultiProviderUrl(
                 (string) $wallet['address_in'],
                 $amount,
@@ -165,7 +170,7 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
                 (string) $wallet['address_in'],
                 $amount,
                 $currency,
-                $provider !== '' ? $provider : null,
+                $provider,
                 $email
             );
         }
@@ -183,6 +188,17 @@ class PayGatePaymentHandler implements AsynchronousPaymentHandlerInterface
         ]);
 
         return new RedirectResponse($paymentUrl);
+    }
+
+    private function loadWhiteLabel(string $salesChannelId): array
+    {
+        return array_filter([
+            'domain' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelDomain', $salesChannelId),
+            'logo' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelLogo', $salesChannelId),
+            'background' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelBackground', $salesChannelId),
+            'theme' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelTheme', $salesChannelId),
+            'button' => (string) $this->systemConfigService->get('PayGatePayment.config.whiteLabelButton', $salesChannelId),
+        ], static fn ($v): bool => $v !== '');
     }
 
     private function persistTransactionData(
