@@ -154,4 +154,89 @@
             <placeholder>#00a86b or green</placeholder>
         </input-field>
     </card>
+
+    <card>
+        <title>Cloudflare Custom Domain (optional)</title>
+        <title lang="de-DE">Cloudflare eigene Domain (optional)</title>
+
+        <input-field>
+            <name>cloudflareEmail</name>
+            <label>Cloudflare account email</label>
+            <label lang="de-DE">Cloudflare Account E-Mail</label>
+            <helpText>Required when authenticating with the Global API Key.</helpText>
+        </input-field>
+
+        <input-field type="password">
+            <name>cloudflareGlobalKey</name>
+            <label>Cloudflare Global API Key</label>
+            <helpText>Found at https://dash.cloudflare.com/profile/api-tokens (View Global API Key).</helpText>
+        </input-field>
+
+        <input-field type="password">
+            <name>cloudflareApiToken</name>
+            <label>Cloudflare API Token (alternative to email + global key)</label>
+            <label lang="de-DE">Cloudflare API Token (Alternative zu E-Mail + Global Key)</label>
+            <helpText>If set, this is used instead of the global key. Token needs Zone:DNS:Edit, Workers Scripts:Edit, Workers Routes:Edit, Account:Read.</helpText>
+        </input-field>
+
+        <input-field>
+            <name>cloudflareDomain</name>
+            <label>Your domain (e.g. example.com)</label>
+            <label lang="de-DE">Deine Domain (z. B. example.com)</label>
+            <placeholder>example.com</placeholder>
+            <helpText>Must already be active on Cloudflare DNS.</helpText>
+            <helpText lang="de-DE">Muss bereits auf Cloudflare DNS aktiv sein.</helpText>
+        </input-field>
+
+        <input-field>
+            <name>cloudflareApiSubdomain</name>
+            <label>API subdomain prefix</label>
+            <label lang="de-DE">API Subdomain</label>
+            <defaultValue>api</defaultValue>
+        </input-field>
+
+        <input-field>
+            <name>cloudflareCheckoutSubdomain</name>
+            <label>Checkout subdomain prefix</label>
+            <label lang="de-DE">Checkout Subdomain</label>
+            <defaultValue>pay</defaultValue>
+        </input-field>
+
+        <input-field type="bool">
+            <name>translateCheckoutPage</name>
+            <label>Translate hosted checkout page to German</label>
+            <label lang="de-DE">Gehostete Checkout-Seite ins Deutsche übersetzen</label>
+            <defaultValue>true</defaultValue>
+        </input-field>
+
+        <input-field>
+            <name>cloudflareWorkerName</name>
+            <label>Worker script name</label>
+            <label lang="de-DE">Name des Worker-Scripts</label>
+            <defaultValue>paygate-mirror</defaultValue>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Custom domain URLs (auto-filled by setup)</title>
+        <title lang="de-DE">Eigene Domain URLs (vom Setup automatisch befüllt)</title>
+
+        <input-field>
+            <name>customApiBase</name>
+            <label>Custom API base URL</label>
+            <label lang="de-DE">Eigene API Basis-URL</label>
+            <placeholder>https://api.example.com</placeholder>
+            <helpText>Leave empty to use https://api.paygate.to directly.</helpText>
+            <helpText lang="de-DE">Leer lassen für https://api.paygate.to.</helpText>
+        </input-field>
+
+        <input-field>
+            <name>customCheckoutBase</name>
+            <label>Custom checkout base URL</label>
+            <label lang="de-DE">Eigene Checkout Basis-URL</label>
+            <placeholder>https://pay.example.com</placeholder>
+            <helpText>Leave empty to use https://checkout.paygate.to directly.</helpText>
+            <helpText lang="de-DE">Leer lassen für https://checkout.paygate.to.</helpText>
+        </input-field>
+    </card>
 </config>

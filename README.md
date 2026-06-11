@@ -283,6 +283,92 @@ bin/console theme:compile
 
 ---
 
+## 12. Cloudflare White-Label Setup (optional)
+
+Du kannst die PayGate-Endpunkte (`api.paygate.to`, `checkout.paygate.to`) per
+Cloudflare Worker hinter deine eigene Subdomain legen. Vorteil:
+
+- Kunde sieht nirgends `paygate.to` (auch nicht in URLs/Links)
+- Checkout-Seite wird automatisch ins Deutsche übersetzt
+- Optional: dein Affiliate-Wallet wird global injected (auch für Sub-Merchants)
+
+### Voraussetzungen
+
+- Deine Domain läuft bereits über **Cloudflare DNS** (Free-Plan reicht)
+- Du hast entweder:
+  - **API Token** mit Scopes: `Zone:DNS:Edit`, `Workers Scripts:Edit`,
+    `Workers Routes:Edit`, `Account:Read` (sicherer), **oder**
+  - **Global API Key** + Cloudflare-E-Mail
+
+### Setup im Admin
+
+**Admin → Erweiterungen → PayGate.to → Konfiguration → "Cloudflare eigene Domain"**:
+
+| Feld | Beispiel |
+|---|---|
+| Cloudflare API Token | `xxxxxxxxxxxxxxxx` |
+| (oder) Email + Global Key | `you@example.com` + `abcdef…` |
+| Domain | `example.com` |
+| API Subdomain | `api` (Standard) |
+| Checkout Subdomain | `pay` (Standard) |
+| Checkout auf Deutsch übersetzen | ✓ |
+
+Speichern.
+
+### Setup ausführen
+
+SSH auf den Server, dann:
+
+```bash
+cd /var/www/html
+bin/console paygate:cloudflare:setup
+```
+
+Output:
+
+```
+✓ Zone found: example.com (id …, account …)
+✓ DNS A record (proxied): api.example.com
+✓ DNS A record (proxied): pay.example.com
+✓ Worker uploaded: paygate-mirror
+✓ Route: api.example.com/* -> paygate-mirror
+✓ Route: pay.example.com/* -> paygate-mirror
+✓ Plugin now uses https://api.example.com and https://pay.example.com
+
+ [OK] Setup complete.
+```
+
+Das Plugin schreibt die neuen URLs automatisch in die "Custom domain URLs"-Karte
+der Konfiguration und nutzt sie ab sofort. PayGate-Endpunkte erscheinen für
+Kunden nicht mehr.
+
+### Was der Worker macht
+
+1. Proxy: alle Requests an `api.example.com` / `pay.example.com` werden
+   intern an `api.paygate.to` / `checkout.paygate.to` weitergeleitet.
+2. Pfad-Rewrite: `/control/wallet.php` → `/control/affiliate.php` mit deinem
+   Affiliate-Wallet als Parameter (nur wenn Affiliate gesetzt).
+3. Domain-Injection: `&domain=pay.example.com` wird bei jedem Checkout-Aufruf
+   angehängt – sorgt dafür dass PayGate intern auf deine Domain verweist.
+4. HTML-Rewrite: alle `https://checkout.paygate.to`-Strings im HTML/JS werden
+   durch deine Subdomain ersetzt → kein einziger `paygate.to`-Link mehr sichtbar.
+5. Übersetzung: englische UI-Strings werden durch deutsche ersetzt.
+
+### Übersetzungen anpassen
+
+Die Translation-Map liegt in
+`src/Resources/cloudflare/worker.js` als `TRANSLATIONS`-Objekt. Strings hinzufügen
+oder ändern, dann nochmal `bin/console paygate:cloudflare:setup` ausführen
+(idempotent – überschreibt nur den Worker, DNS/Routes bleiben).
+
+### Rückgängig
+
+Custom-URLs im Admin manuell leeren → Plugin nutzt wieder direkt `paygate.to`.
+Worker/DNS-Records bleiben bei Cloudflare bestehen (manuell entfernen falls
+nicht mehr gewünscht).
+
+---
+
 ## Lizenz
 
 MIT

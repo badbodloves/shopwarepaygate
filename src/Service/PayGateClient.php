@@ -7,8 +7,8 @@ use Shopware\Core\System\SystemConfig\SystemConfigService;
 
 class PayGateClient
 {
-    private const API_BASE = 'https://api.paygate.to';
-    private const CHECKOUT_BASE = 'https://checkout.paygate.to';
+    public const API_BASE_DEFAULT = 'https://api.paygate.to';
+    public const CHECKOUT_BASE_DEFAULT = 'https://checkout.paygate.to';
 
     private SystemConfigService $systemConfigService;
     private LoggerInterface $logger;
@@ -17,6 +17,18 @@ class PayGateClient
     {
         $this->systemConfigService = $systemConfigService;
         $this->logger = $logger;
+    }
+
+    public function apiBase(): string
+    {
+        $custom = trim((string) $this->systemConfigService->get('PayGatePayment.config.customApiBase'));
+        return $custom !== '' ? rtrim($custom, '/') : self::API_BASE_DEFAULT;
+    }
+
+    public function checkoutBase(): string
+    {
+        $custom = trim((string) $this->systemConfigService->get('PayGatePayment.config.customCheckoutBase'));
+        return $custom !== '' ? rtrim($custom, '/') : self::CHECKOUT_BASE_DEFAULT;
     }
 
     /**
@@ -37,7 +49,7 @@ class PayGateClient
         if ($affiliate !== '') {
             $url = sprintf(
                 '%s/control/affiliate.php?address=%s&affiliate=%s&callback=%s',
-                self::API_BASE,
+                $this->apiBase(),
                 rawurlencode($merchant),
                 rawurlencode($affiliate),
                 rawurlencode($callbackUrl)
@@ -45,7 +57,7 @@ class PayGateClient
         } else {
             $url = sprintf(
                 '%s/control/wallet.php?address=%s&callback=%s',
-                self::API_BASE,
+                $this->apiBase(),
                 rawurlencode($merchant),
                 rawurlencode($callbackUrl)
             );
@@ -105,7 +117,7 @@ class PayGateClient
             $params['email'] = $email;
         }
 
-        return self::CHECKOUT_BASE . '/process-payment.php?' . http_build_query($params);
+        return $this->checkoutBase() . '/process-payment.php?' . http_build_query($params);
     }
 
     /**
@@ -137,7 +149,7 @@ class PayGateClient
             }
         }
 
-        return self::CHECKOUT_BASE . '/pay.php?' . http_build_query($params);
+        return $this->checkoutBase() . '/pay.php?' . http_build_query($params);
     }
 
     /**
@@ -149,7 +161,7 @@ class PayGateClient
      */
     public function listProviders(): array
     {
-        $body = $this->httpGet(self::API_BASE . '/control/provider-status');
+        $body = $this->httpGet($this->apiBase() . '/control/provider-status');
         $this->logger->info('PayGate.to provider-status response', [
             'body' => substr($body, 0, 2000),
         ]);
@@ -193,7 +205,7 @@ class PayGateClient
     {
         $url = sprintf(
             '%s/control/convert.php?from=%s&value=%s',
-            self::API_BASE,
+            $this->apiBase(),
             rawurlencode($fromCurrency),
             rawurlencode(number_format($value, 2, '.', ''))
         );
@@ -219,7 +231,7 @@ class PayGateClient
      */
     public function checkPaymentStatus(string $ipnToken): array
     {
-        $url = sprintf('%s/control/payment-status.php?ipn_token=%s', self::API_BASE, rawurlencode($ipnToken));
+        $url = sprintf('%s/control/payment-status.php?ipn_token=%s', $this->apiBase(), rawurlencode($ipnToken));
         $body = $this->httpGet($url);
         $data = $this->decodeJson($body);
 
